@@ -131,6 +131,7 @@
       } else {
         container.style.right = "12px";
         container.style.transform = "scale(0.5)";
+        container.style.transformOrigin = "bottom right";
       }
 
       container.style.margin = "0";
@@ -283,4 +284,5 @@
   };
 
 })();
+
 
