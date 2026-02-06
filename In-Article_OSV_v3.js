@@ -11,9 +11,12 @@
   const HEIGHT = isMobile ? 190 : 360;
 
   const STICKY_BOTTOM = isMobile ? 110 : 12;
+  const STICKY_TOP = 50;
 
   const INSERT_AFTER_P = 2;
   const MIDROLL_INTERVAL = 5;
+  const ENABLE_STICKY = true; // set to false for pure in-article player
+
 
   const BTN_SIZE = isMobile ? 40 : 50;
   const BTN_FONT = isMobile ? 20 : 30;
@@ -56,6 +59,14 @@
     pointer-events:auto;
   `;
 
+  const placeholder = doc.createElement("div");
+  placeholder.style.width = WIDTH + "px";
+  placeholder.style.height = HEIGHT + "px";
+  placeholder.style.margin = isMobile
+    ? "15px auto 20px auto"
+    : "15px auto";
+  placeholder.style.display = "none";
+
   container.innerHTML = `
     <video id="mc-video" playsinline muted
       style="width:100%;height:100%;background:#000"></video>
@@ -82,11 +93,13 @@
   }
 
   injectInArticle();
+  container.after(placeholder);
 
   const video = container.querySelector("#mc-video");
   const adLayer = container.querySelector("#mc-ad-layer");
   const closeBtn = container.querySelector("#mc-close");
   const muteBtn  = container.querySelector("#mc-mute");
+  adLayer.style.pointerEvents = "none";
 
   video.src = CONTENT_VIDEO;
   video.loop = true;
@@ -116,52 +129,56 @@
   }
 
   window.addEventListener("scroll", () => {
-    const y = window.scrollY;
-    const inlineTop = getInlineTop();
-    const shouldFloat = y > inlineTop + 300;
+  if (!ENABLE_STICKY) return;
 
-    if (shouldFloat && !isFloating) {
-      isFloating = true;
-      container.style.position = "fixed";
-      closeBtn.style.display = "block";
+  const y = window.scrollY;
+  const inlineTop = getInlineTop();
+  const shouldFloat = y > inlineTop + 300;
+
+  if (shouldFloat && !isFloating) {
+    isFloating = true;
+    placeholder.style.display = "block";
+
+    container.style.position = "fixed";
+    closeBtn.style.display = "block";
+
+    if (isMobile) {
+      container.style.top = STICKY_TOP + "px";
+      container.style.left = "50%";
+      container.style.transform = "translateX(-50%)";
+    } else {
       container.style.bottom = STICKY_BOTTOM + "px";
-
-      if (isMobile) {
-        container.style.left = "50%";
-        container.style.transform = "translateX(-50%)";
-      } else {
-        container.style.right = "12px";
-        container.style.transform = "scale(0.5)";
-        container.style.transformOrigin = "bottom right";
-      }
-
-      container.style.margin = "0";
+      container.style.right = "12px";
+      container.style.transform = "scale(0.5)";
+      container.style.transformOrigin = "bottom right";
     }
 
-    if (!shouldFloat && isFloating) {
-      isFloating = false;
-      container.style.position = "relative";
-      container.style.bottom = "auto";
-      container.style.left = "auto";
-      container.style.right = "auto";
-      container.style.transform = "none";
-      closeBtn.style.display = "none";
-      container.style.margin = isMobile ? "15px auto 20px auto" : "15px auto";
-    }
-  });
+    container.style.margin = "0";
+  }
 
-  /* LOAD IMA AND REQUEST PREROLL IMMEDIATELY */
+  if (!shouldFloat && isFloating) {
+    isFloating = false;
+    placeholder.style.display = "none";
+
+    container.style.position = "relative";
+    container.style.top = "auto";
+    container.style.bottom = "auto";
+    container.style.left = "auto";
+    container.style.right = "auto";
+    container.style.transform = "none";
+    closeBtn.style.display = "none";
+    container.style.margin = isMobile ? "15px auto 20px auto" : "15px auto";
+  }
+});
 
   loadIMA();
   observeViewability();
 
   function loadIMA() {
-
     if (window.google && window.google.ima) {
       initIMA();
       return;
     }
-
     const s = doc.createElement("script");
     s.src = "https://imasdk.googleapis.com/js/sdkloader/ima3.js";
     s.onload = initIMA;
@@ -169,9 +186,7 @@
   }
 
   function initIMA() {
-
     adc = new google.ima.AdDisplayContainer(adLayer, video);
-
     adsLoader = new google.ima.AdsLoader(adc);
 
     adsLoader.addEventListener(
@@ -185,38 +200,26 @@
     );
 
     adc.initialize();
-
     requestAds(false);
   }
 
   function observeViewability() {
-
     const observer = new IntersectionObserver(entries => {
-
       if (entries[0].intersectionRatio >= 0.25) {
-
         viewable = true;
-
         startAdsIfViewable();
-
         observer.disconnect();
       }
-
     }, { threshold: 0.25 });
 
     observer.observe(container);
   }
 
   function startAdsIfViewable() {
-
     if (!viewable || !adsManagerReady || playerKilled) return;
-
     try {
-
       adsManager.init(WIDTH, HEIGHT, google.ima.ViewMode.NORMAL);
-
       adsManager.start();
-
     } catch(e){}
   }
 
@@ -224,7 +227,6 @@
     if (playerKilled) return;
 
     const req = new google.ima.AdsRequest();
-
     const baseUrl = isMidroll ? VAST_URLS[1] : VAST_URLS[0];
     const vpmute  = getVPMute();
 
@@ -235,21 +237,19 @@
 
     req.linearAdSlotWidth = WIDTH;
     req.linearAdSlotHeight = HEIGHT;
-	req.setAdWillAutoPlay(true);
+    req.setAdWillAutoPlay(true);
     req.plcmt = 1;
 
     adsLoader.requestAds(req);
   }
 
   function onAdsManagerLoaded(e) {
-
     adsManager = e.getAdsManager(video);
-
     adsManager.setVolume(video.muted ? 0 : 1);
 
     adsManager.addEventListener(
       google.ima.AdEvent.Type.STARTED,
-      () => { adPlaying = true; video.pause(); }
+      () => { adPlaying = true; video.pause(); adLayer.style.pointerEvents = "auto";}
     );
 
     adsManager.addEventListener(
@@ -258,13 +258,13 @@
         isPreroll = false;
         midrollPlaying = false;
         adPlaying = false;
+		adLayer.style.pointerEvents = "none";
         adsLoader.contentComplete();
         video.play().catch(()=>{});
       }
     );
 
     adsManagerReady = true;
-
     startAdsIfViewable();
   }
 
@@ -307,8 +307,10 @@
   closeBtn.onclick = () => {
     playerKilled = true;
     try { adsManager?.destroy(); } catch(e){}
-    video.pause(); video.src="";
+    video.pause(); 
+    video.src = "";
     container.remove();
+    placeholder.remove();
     window.__MC_OUTSTREAM_LOADED__ = false;
   };
 
