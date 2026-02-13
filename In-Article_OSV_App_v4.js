@@ -3,221 +3,198 @@
   if (window.__MC_OUTSTREAM__) return;
   window.__MC_OUTSTREAM__ = true;
 
-  const doc = document;
+  const VAST_TAG = "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_3&output=vast&env=vp&vpos=preroll&impl=s&plcmt=1";
 
-  /* ================= CONFIG ================= */
+  /* =========================
+     LOAD IMA SDK
+  ========================== */
 
-  const CONFIG = {
-    width: 340,
-    height: 190,
-    insertAfterParagraph: 3,
-    viewabilityThreshold: 0.5,
-    contentVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
-    adTag: "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_3&output=vast&env=vp&gdfp_req=1&unviewed_position_start=1&impl=s&plcmt=1&vpos=preroll&sz=640x360&ciu_szs=640x360"
-  };
-
-  const correlator = Date.now();
-
-  /* ================= STATE ================= */
-
-  let adsLoader = null;
-  let adsManager = null;
-  let adDisplayContainer = null;
-
-  let isViewable = false;
-  let prerollRequested = false;
-  let playerDestroyed = false;
-  let viewTimer = null;
-
-  /* ================= UI ================= */
-
-  const container = doc.createElement("div");
-  container.style.cssText = `
-    width:${CONFIG.width}px;
-    height:${CONFIG.height}px;
-    background:#000;
-    margin:20px auto;
-    position:relative;
-    opacity:0;
-    visibility:hidden;
-  `;
-
-  container.innerHTML = `
-    <video playsinline muted style="width:100%;height:100%;background:#000"></video>
-    <div style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;"></div>
-    <button id="mc-close" style="position:absolute;top:6px;left:6px;display:none;">×</button>
-  `;
-
-  function inject() {
-    const p = doc.querySelectorAll("p");
-    if (p.length >= CONFIG.insertAfterParagraph) {
-      p[CONFIG.insertAfterParagraph - 1].after(container);
-    } else {
-      doc.body.appendChild(container);
+  function loadIMA(callback) {
+    if (window.google && google.ima) {
+      callback();
+      return;
     }
-  }
 
-  inject();
-
-  const video = container.querySelector("video");
-  const adLayer = container.children[1];
-  const closeBtn = container.querySelector("#mc-close");
-
-  video.src = CONFIG.contentVideo;
-  video.muted = true;
-  video.loop = false;
-
-  video.addEventListener("playing", () => {
-    container.style.opacity = "1";
-    container.style.visibility = "visible";
-  });
-
-  /* ================= IMA ================= */
-
-  function loadIMA() {
-    if (window.google && google.ima) return initIMA();
-
-    const s = doc.createElement("script");
+    const s = document.createElement("script");
     s.src = "https://imasdk.googleapis.com/js/sdkloader/ima3.js";
-    s.onload = initIMA;
-    doc.head.appendChild(s);
+    s.onload = callback;
+    document.head.appendChild(s);
   }
 
-  function initIMA() {
+  loadIMA(initPlayer);
 
-    adDisplayContainer = new google.ima.AdDisplayContainer(adLayer, video);
+  function initPlayer() {
+
+    /* =========================
+       CREATE CONTAINER
+    ========================== */
+
+    const container = document.createElement("div");
+    container.style.cssText = `
+      position:relative;
+      width:100%;
+      max-width:640px;
+      height:360px;
+      margin:20px auto;
+      background:#000;
+      overflow:hidden;
+    `;
+
+    const video = document.createElement("video");
+    video.playsInline = true;
+    video.muted = true;
+    video.style.cssText = `
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:#000;
+    `;
+
+    const adLayer = document.createElement("div");
+    adLayer.style.cssText = `
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      z-index:5;
+    `;
+
+    const closeBtn = document.createElement("button");
+    closeBtn.innerHTML = "✕";
+    closeBtn.style.cssText = `
+      position:absolute;
+      top:6px;
+      left:6px;
+      z-index:20;
+      display:none;
+      background:rgba(0,0,0,0.6);
+      color:#fff;
+      border:0;
+      padding:4px 8px;
+      cursor:pointer;
+    `;
+
+    const muteBtn = document.createElement("button");
+    muteBtn.innerHTML = "🔇";
+    muteBtn.style.cssText = `
+      position:absolute;
+      bottom:6px;
+      left:6px;
+      z-index:20;
+      background:rgba(0,0,0,0.6);
+      color:#fff;
+      border:0;
+      padding:4px 8px;
+      cursor:pointer;
+    `;
+
+    container.appendChild(video);
+    container.appendChild(adLayer);
+    container.appendChild(closeBtn);
+    container.appendChild(muteBtn);
+
+    document.body.appendChild(container);
+
+    let adsManager;
+    let adsLoader;
+
+    /* =========================
+       IMA SETUP
+    ========================== */
+
+    const adDisplayContainer = new google.ima.AdDisplayContainer(adLayer, video);
     adsLoader = new google.ima.AdsLoader(adDisplayContainer);
 
     adsLoader.addEventListener(
       google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
-      onAdsManagerLoaded
+      function (event) {
+
+        adsManager = event.getAdsManager(video);
+
+        adsManager.addEventListener(
+          google.ima.AdErrorEvent.Type.AD_ERROR,
+          destroyPlayer
+        );
+
+        adsManager.addEventListener(
+          google.ima.AdEvent.Type.ALL_ADS_COMPLETED,
+          destroyPlayer
+        );
+
+        adsManager.init(
+          container.offsetWidth,
+          container.offsetHeight,
+          google.ima.ViewMode.NORMAL
+        );
+
+        adsManager.start();
+
+        adLayer.style.pointerEvents = "none";
+        closeBtn.style.display = "block";
+      }
     );
 
     adsLoader.addEventListener(
       google.ima.AdErrorEvent.Type.AD_ERROR,
-      onAdError
-    );
-  }
-
-  function requestAd() {
-
-    if (prerollRequested || playerDestroyed) return;
-
-    prerollRequested = true;
-
-    adDisplayContainer.initialize();
-
-    const request = new google.ima.AdsRequest();
-    request.adTagUrl =
-      CONFIG.adTag +
-      "&correlator=" + correlator +
-      "&cb=" + correlator;
-
-    request.linearAdSlotWidth = CONFIG.width;
-    request.linearAdSlotHeight = CONFIG.height;
-    request.setAdWillAutoPlay(true);
-    request.setAdWillPlayMuted(true);
-
-    adsLoader.requestAds(request);
-  }
-
-  function onAdsManagerLoaded(event) {
-
-    adsManager = event.getAdsManager(video);
-
-    adsManager.addEventListener(
-      google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED,
-      () => video.pause()
+      destroyPlayer
     );
 
-    adsManager.addEventListener(
-      google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED,
-      () => video.play().catch(()=>{})
-    );
+    function requestAd() {
+      adDisplayContainer.initialize();
 
-    adsManager.addEventListener(
-      google.ima.AdEvent.Type.ALL_ADS_COMPLETED,
-      () => {
-        video.play().catch(()=>{});
-      }
-    );
+      const adsRequest = new google.ima.AdsRequest();
+      adsRequest.adTagUrl = VAST_TAG;
+      adsRequest.linearAdSlotWidth = container.offsetWidth;
+      adsRequest.linearAdSlotHeight = container.offsetHeight;
 
-    adsManager.addEventListener(
-      google.ima.AdErrorEvent.Type.AD_ERROR,
-      onAdError
-    );
-
-    try {
-      adsManager.init(CONFIG.width, CONFIG.height, google.ima.ViewMode.NORMAL);
-      adsManager.start();
-    } catch (e) {
-      video.play().catch(()=>{});
+      adsLoader.requestAds(adsRequest);
     }
 
-    // show close button after 5 seconds
-    setTimeout(() => {
-      if (!playerDestroyed) closeBtn.style.display = "block";
-    }, 5000);
-  }
+    /* =========================
+       VIEWPORT TRIGGER (25%)
+    ========================== */
 
-  function onAdError() {
-    video.play().catch(()=>{});
-  }
-
-  /* ================= VIEWABILITY (IAB 2s Rule) ================= */
-
-  function setupObserver() {
-
-    const observer = new IntersectionObserver((entries) => {
-
-      if (playerDestroyed) return;
-
-      const entry = entries[0];
-      const visible =
-        entry.intersectionRatio >= CONFIG.viewabilityThreshold;
-
-      if (visible) {
-
-        if (!viewTimer) {
-          viewTimer = setTimeout(() => {
-            isViewable = true;
-            requestAd();
-          }, 2000);
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.25) {
+          observer.disconnect();
+          requestAd();
         }
-
-      } else {
-
-        clearTimeout(viewTimer);
-        viewTimer = null;
-
-        isViewable = false;
-
-        video.pause();
-        try { adsManager?.pause(); } catch(e){}
-      }
-
-    }, { threshold: [CONFIG.viewabilityThreshold] });
+      });
+    }, { threshold: 0.25 });
 
     observer.observe(container);
+
+    /* =========================
+       MUTE
+    ========================== */
+
+    muteBtn.onclick = function () {
+      video.muted = !video.muted;
+
+      try {
+        if (adsManager) {
+          adsManager.setVolume(video.muted ? 0 : 1);
+        }
+      } catch(e){}
+
+      muteBtn.innerHTML = video.muted ? "🔇" : "🔊";
+    };
+
+    /* =========================
+       CLOSE
+    ========================== */
+
+    closeBtn.onclick = destroyPlayer;
+
+    function destroyPlayer() {
+      try { adsManager && adsManager.destroy(); } catch(e){}
+      container.remove();
+    }
+
   }
-
-  setupObserver();
-
-  /* ================= CLOSE ================= */
-
-  closeBtn.onclick = () => {
-
-    playerDestroyed = true;
-
-    try { adsManager?.destroy(); } catch(e){}
-    try { adsLoader?.destroy(); } catch(e){}
-
-    video.pause();
-    container.remove();
-
-    window.__MC_OUTSTREAM__ = false;
-  };
-
-  loadIMA();
 
 })();
