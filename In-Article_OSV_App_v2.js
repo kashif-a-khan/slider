@@ -205,6 +205,10 @@
     }
   });
 
+  container.addEventListener("click", function() {
+  alert("Container clicked");
+});
+
   function tryNextVast() {
     if (adsManager) adsManager.destroy();
     midrollPlaying = false;
