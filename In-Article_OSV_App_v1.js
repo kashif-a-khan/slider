@@ -14,7 +14,7 @@
   const STICKY_TOP = 50;
 
   const INSERT_AFTER_P = 2;
-  const MIDROLL_INTERVAL = 15;
+  const MIDROLL_INTERVAL = 5;
   const ENABLE_STICKY = false; // set to false for pure in-article player
 
 
