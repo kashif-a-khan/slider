@@ -23,7 +23,7 @@
   const BTN_LEFT_MARGIN = isMobile ? 5 : 0;
 
   const CONTENT_VIDEO =
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4";
+    "https://www.w3schools.com/html/mov_bbb.mp4";
 
   const VAST_URLS = [
     "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_3&description_url=https%3A%2F%2Fwww.moneycontrol.com&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&vpos=preroll&impl=s&plcmt=1&vpw=640&vph=360",
