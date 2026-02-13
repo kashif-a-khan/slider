@@ -262,7 +262,7 @@
     adsManager = e.getAdsManager(video);
     adsManager.setVolume(video.muted ? 0 : 1);
 
-    adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, () => { adPlaying=true; video.pause(); adLayer.style.pointerEvents="auto"; });
+    adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, () => { adPlaying=true; if (thumbnail) thumbnail.style.display = "none"; muteBtn.style.display = "block"; video.pause(); adLayer.style.pointerEvents="auto"; });
     adsManager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, () => {
       adPlaying=false; adLayer.style.pointerEvents="none"; adsLoader.contentComplete();
 
