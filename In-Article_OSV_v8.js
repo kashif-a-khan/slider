@@ -23,7 +23,7 @@
   const BTN_LEFT_MARGIN = isMobile ? 5 : 0;
 
   const CONTENT_VIDEO =
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4";
+    "https://media-moneycontrol.akamaized.net/13542031/manifest.m3u8";
 
   const VAST_URLS = [
     "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_3&description_url=https%3A%2F%2Fwww.moneycontrol.com&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&vpos=preroll&impl=s&plcmt=1&vpw=640&vph=360",
@@ -126,11 +126,53 @@
   const muteBtn  = container.querySelector("#mc-mute");
   adLayer.style.pointerEvents = "none";
 
-  video.src = CONTENT_VIDEO;
-  video.loop = true;
-  video.muted = true;
-  video.setAttribute("muted","");
-  video.setAttribute("playsinline","");
+  let hlsInstance = null;
+
+function loadContentVideo() {
+
+  // If normal MP4 → do exactly what you already do
+  if (!CONTENT_VIDEO.includes(".m3u8")) {
+    video.src = CONTENT_VIDEO;
+    return;
+  }
+
+  // Native HLS support (Safari, iOS, some Android WebViews)
+  if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = CONTENT_VIDEO;
+    return;
+  }
+
+  // Otherwise load hls.js dynamically
+  const script = document.createElement("script");
+  script.src = "https://cdn.jsdelivr.net/npm/hls.js@latest";
+
+  script.onload = function () {
+
+    if (!window.Hls || !Hls.isSupported()) {
+      console.warn("HLS not supported");
+      return;
+    }
+
+    hlsInstance = new Hls({
+      enableWorker: true,
+      lowLatencyMode: true,
+      backBufferLength: 30
+    });
+
+    hlsInstance.loadSource(CONTENT_VIDEO);
+    hlsInstance.attachMedia(video);
+  };
+
+  document.head.appendChild(script);
+}
+
+loadContentVideo();
+
+video.loop = false;
+video.muted = true;
+video.setAttribute("muted","");
+video.setAttribute("playsinline","");
+
 
   video.addEventListener("playing", () => {
     container.style.opacity = "1";
@@ -330,13 +372,14 @@
   };
 
   closeBtn.onclick = () => {
-    playerKilled = true;
-    try { adsManager?.destroy(); } catch(e){}
-    video.pause(); 
-    video.src = "";
-    container.remove();
-    placeholder.remove();
-    window.__MC_OUTSTREAM_LOADED__ = false;
-  };
-
+  playerKilled = true;
+  try { adsManager?.destroy(); } catch(e){}
+  try { hlsInstance?.destroy(); } catch(e){}
+  video.pause(); 
+  video.src = "";
+  container.remove();
+  placeholder.remove();
+  window.__MC_OUTSTREAM_LOADED__ = false;
+};
+	
 })();
