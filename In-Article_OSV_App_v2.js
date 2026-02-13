@@ -22,8 +22,7 @@
   const BTN_LEFT_MARGIN = isMobile ? 5 : 0;
 
   const CONTENT_VIDEO =
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4";
-
+    "https://www.w3schools.com/html/mov_bbb.mp4";
   const VAST_URLS = [
     "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_3&output=vast&env=vp&vpos=preroll&impl=s&plcmt=1",
     "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_4&output=vast&env=vp&vpos=midroll&impl=s&plcmt=1"
