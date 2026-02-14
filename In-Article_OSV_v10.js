@@ -246,11 +246,11 @@
   // Play/pause on scroll into view
   const observer = new IntersectionObserver(entries => {
     const entry = entries[0];
-    viewable = entry.intersectionRatio >= 0.25;
+    viewable = entry.intersectionRatio >= 0.1;
 
     if (viewable && adsManagerReady && !playerKilled) startAdsIfViewable();
     if (!adPlaying && !isPreroll) { if (viewable) video.play().catch(()=>{}); else video.pause(); }
-  }, { threshold: 0.25 });
+  }, { threshold: 0.1 });
 
   observer.observe(container);
 
