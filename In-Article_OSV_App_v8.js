@@ -195,26 +195,40 @@
 
   /* ---------------- VIEWABILITY ---------------- */
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      const entry = entries[0];
-      const visible =
-        entry.isIntersecting &&
-        entry.intersectionRatio >= 0.25 &&
-        appVisible;
+  
+  /* ---------------- HYBRID VIEWABILITY (WEBVIEW SAFE) ---------------- */
 
-      if (visible && !actuallyViewable) {
-        actuallyViewable = true;
-        resumeAll();
-      }
+let observerRatio = 0;
 
-      if (!visible && actuallyViewable) {
-        actuallyViewable = false;
-        pauseAll();
-      }
-    },
-    { threshold: [0,0.25,0.5,1] }
-  );
+const observer = new IntersectionObserver(
+  (entries) => {
+    const entry = entries[0];
+    observerRatio = entry.intersectionRatio || 0;
+  },
+  { threshold: [0,0.25,0.5,1] }
+);
+
+observer.observe(container);
+
+setInterval(() => {
+
+  if (playerKilled) return;
+
+  const visible =
+    observerRatio >= 0.25 &&
+    appVisible;
+
+  if (visible && !actuallyViewable) {
+    actuallyViewable = true;
+    resumeAll();
+  }
+
+  if (!visible && actuallyViewable) {
+    actuallyViewable = false;
+    pauseAll();
+  }
+
+}, 400);
 
   observer.observe(container);
 
