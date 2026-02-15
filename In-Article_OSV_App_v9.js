@@ -45,6 +45,8 @@
   let prerollRequested = false;
   let prerollStarted = false;
 
+  let contentStarted = false;
+
   let waterfallIndex = 0;
   let waterfallTimeout = null;
   const WATERFALL_TIMEOUT_MS = 3000;
@@ -62,10 +64,12 @@
     margin:15px auto 20px auto;
     position:relative;
     z-index:999999;
+    opacity:0;
+    visibility:hidden;
   `;
 
   container.innerHTML = `
-    <video id="mc-video" style="width:100%;height:100%;background:#000"></video>
+    <video id="mc-video" style="width:100%;height:100%;background:#000" muted playsinline></video>
     <div id="mc-ad-layer"
       style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1000;"></div>
     <button id="mc-close"
@@ -90,11 +94,12 @@
   const closeBtn = container.querySelector("#mc-close");
   const muteBtn  = container.querySelector("#mc-mute");
 
-  video.preload = "metadata";
-  video.muted = true;
-  video.playsInline = true;
-  video.setAttribute("playsinline","");
   video.src = CONTENT_VIDEO;
+
+  video.addEventListener("playing", () => {
+    container.style.opacity = "1";
+    container.style.visibility = "visible";
+  });
 
   /* ---------------- IMA ---------------- */
 
@@ -117,23 +122,22 @@
 
     adsLoader.addEventListener(
       google.ima.AdErrorEvent.Type.AD_ERROR,
-      () => nextWaterfall()
+      () => {
+        if (isPreroll) startContent();
+        else midrollPlaying = false;
+      }
     );
 
     adc.initialize();
-
-    // FORCE FIRST START
-    setTimeout(() => {
-      actuallyViewable = true;
-      resumeAll();
-    }, 500);
   }
 
   function requestAds() {
 
     if (playerKilled) return;
-
-    if (waterfallIndex >= PREROLL_WATERFALL.length) return;
+    if (waterfallIndex >= PREROLL_WATERFALL.length) {
+      if (isPreroll) startContent();
+      return;
+    }
 
     const req = new google.ima.AdsRequest();
     req.adTagUrl =
@@ -148,13 +152,9 @@
 
     clearTimeout(waterfallTimeout);
     waterfallTimeout = setTimeout(() => {
-      nextWaterfall();
+      waterfallIndex++;
+      requestAds();
     }, WATERFALL_TIMEOUT_MS);
-  }
-
-  function nextWaterfall() {
-    waterfallIndex++;
-    requestAds();
   }
 
   function onAdsManagerLoaded(e) {
@@ -169,7 +169,6 @@
       () => {
         adPlaying = true;
         prerollStarted = true;
-        waterfallIndex = 0;
         video.pause();
       }
     );
@@ -180,46 +179,80 @@
 
         adPlaying = false;
         midrollPlaying = false;
-        isPreroll = false;
 
-        prerollRequested = false;
-        prerollStarted = false;
-
-        video.play().catch(()=>{});
+        if (isPreroll) {
+          isPreroll = false;
+          startContent();
+        }
       }
     );
+
+    try {
+      adsManager.init(WIDTH, HEIGHT, google.ima.ViewMode.NORMAL);
+      adsManager.start();
+    } catch(e) {
+      if (isPreroll) startContent();
+    }
   }
 
-  function resumeAll() {
+  /* ---------------- CONTENT START (FIXED) ---------------- */
+
+  function startContent() {
+
+    if (contentStarted || playerKilled) return;
+
+    contentStarted = true;
+    adPlaying = false;
+
+    video.src = CONTENT_VIDEO;
+    video.load();
+
+    const p = video.play();
+    if (p !== undefined) p.catch(()=>{});
+  }
+
+  /* ---------------- VIEWABILITY ---------------- */
+
+  let observerRatio = 0;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      observerRatio = entries[0].intersectionRatio || 0;
+    },
+    { threshold: [0,0.25,0.5,1] }
+  );
+
+  observer.observe(container);
+
+  setInterval(() => {
 
     if (playerKilled) return;
-    if (!appVisible) return;
 
-    if (isPreroll && !prerollRequested) {
-      prerollRequested = true;
-      waterfallIndex = 0;
-      requestAds();
-      return;
+    const visible =
+      observerRatio >= 0.25 &&
+      appVisible;
+
+    if (visible && !actuallyViewable) {
+      actuallyViewable = true;
+
+      if (isPreroll && !prerollRequested) {
+        prerollRequested = true;
+        waterfallIndex = 0;
+        requestAds();
+      }
+
+      if (!isPreroll && !adPlaying && video.paused) {
+        video.play().catch(()=>{});
+      }
     }
 
-    if (isPreroll && adsManagerReady && !prerollStarted) {
-      try {
-        prerollStarted = true;
-        adsManager.init(WIDTH, HEIGHT, google.ima.ViewMode.NORMAL);
-        adsManager.start();
-      } catch(e){}
-      return;
+    if (!visible && actuallyViewable) {
+      actuallyViewable = false;
+      video.pause();
+      try { adsManager?.pause(); } catch(e){}
     }
 
-    if (!adPlaying && video.paused) {
-      video.play().catch(()=>{});
-    }
-  }
-
-  function pauseAll() {
-    video.pause();
-    try { adsManager?.pause(); } catch(e){}
-  }
+  }, 400);
 
   /* ---------------- MIDROLL ---------------- */
 
@@ -229,6 +262,7 @@
       video.paused ||
       adPlaying ||
       isPreroll ||
+      !actuallyViewable ||
       !appVisible ||
       playerKilled
     ) return;
@@ -246,22 +280,23 @@
 
   },500);
 
+  /* ---------------- LIFECYCLE ---------------- */
+
   document.addEventListener("visibilitychange",()=>{
     if(document.hidden){
       appVisible=false;
-      pauseAll();
+      video.pause();
     } else {
       appVisible=true;
-      resumeAll();
+      if(actuallyViewable && !adPlaying) video.play().catch(()=>{});
     }
   });
 
-  window.addEventListener("blur",pauseAll);
-  window.addEventListener("focus",resumeAll);
+  /* ---------------- CONTROLS ---------------- */
 
   muteBtn.onclick=()=>{
     video.muted=!video.muted;
-    adsManager?.setVolume(video.muted?0:1);
+    try{ adsManager?.setVolume(video.muted?0:1); }catch(e){}
     muteBtn.textContent=video.muted?"🔇":"🔊";
   };
 
