@@ -105,6 +105,10 @@
   video.addEventListener("playing", () => {
     container.style.opacity = "1";
     container.style.visibility = "visible";
+    if(isPreroll){
+    isPreroll = false;
+    watchTime = 0;
+    lastTick = Date.now();
   });
 
   /* ---------------- IMA ---------------- */
@@ -261,7 +265,6 @@
     if(
       video.paused ||
       adPlaying ||
-      isPreroll ||
       !actuallyViewable ||
       !appVisible ||
       playerKilled
