@@ -20,7 +20,8 @@
     "https://www.w3schools.com/html/mov_bbb.mp4";
 
   const VAST_URLS = [
-    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_App_Video_1_1&description_url=https%3A%2F%2Fwww.moneycontrol.com&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&vpos=preroll&impl=s&plcmt=1&vpw=640&vph=360" , "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_App_Video_1_2&description_url=https%3A%2F%2Fwww.moneycontrol.com&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&vpos=midroll&impl=s&plcmt=1&vpw=640&vph=360"
+    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_App_Video_1_1&description_url=https%3A%2F%2Fwww.moneycontrol.com&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&vpos=preroll&impl=s&plcmt=1&vpw=640&vph=360",
+    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_App_Video_1_2&description_url=https%3A%2F%2Fwww.moneycontrol.com&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&vpos=midroll&impl=s&plcmt=1&vpw=640&vph=360"
   ];
 
   let adsLoader = null;
@@ -88,7 +89,7 @@
   const closeBtn = container.querySelector("#mc-close");
   const muteBtn  = container.querySelector("#mc-mute");
 
-  /* ---------------- PRELOAD VIDEO (NO AUTOPLAY) ---------------- */
+  /* ---------------- PRELOAD VIDEO ---------------- */
 
   video.preload = "metadata";
   video.muted = true;
@@ -133,12 +134,15 @@
     );
 
     adc.initialize();
-    requestAds(false); // warm preroll
+    requestAds(false);
   }
 
+  /* ----------- IMPORTANT: RE-INIT BEFORE EVERY REQUEST ----------- */
   function requestAds(isMidroll) {
 
     if (playerKilled) return;
+
+    try { adc.initialize(); } catch(e){}
 
     const req = new google.ima.AdsRequest();
     const baseUrl = isMidroll ? VAST_URLS[1] : VAST_URLS[0];
@@ -151,6 +155,7 @@
     adsLoader.requestAds(req);
   }
 
+  /* ----------- FIXED: MIDROLL CAN START ----------- */
   function onAdsManagerLoaded(e) {
 
     adsManager = e.getAdsManager(video);
@@ -164,14 +169,29 @@
     adsManager.addEventListener(
       google.ima.AdEvent.Type.ALL_ADS_COMPLETED,
       () => {
-        isPreroll = false;
+
         adPlaying = false;
         midrollPlaying = false;
-        if (actuallyViewable && appVisible) video.play().catch(()=>{});
+
+        try { adsManager.destroy(); } catch(e){}
+
+        adsManager = null;
+        adsManagerReady = false;
+        isPreroll = false;
+
+        if (actuallyViewable && appVisible) {
+          video.play().catch(()=>{});
+        }
       }
     );
 
-    adsManagerReady = true;
+    /* 🔴 THIS WAS MISSING — start ads immediately */
+    try {
+      adsManager.init(WIDTH, HEIGHT, google.ima.ViewMode.NORMAL);
+      adsManager.start();
+    } catch (e) {
+      video.play().catch(()=>{});
+    }
   }
 
   /* ---------------- VISIBILITY DETECTION ---------------- */
@@ -196,20 +216,11 @@
 
     if (!actuallyViewable || !appVisible) return;
 
-    if (isPreroll && adsManagerReady && !adPlaying){
-      try{
-        adsManager.init(WIDTH,HEIGHT,google.ima.ViewMode.NORMAL);
-        adsManager.start();
-        return;
-      }catch(e){}
-    }
-
     if(!adPlaying){
       video.play().catch(()=>{});
     }
   }
 
-  /* DOM + APP combined viewability engine */
   setInterval(()=>{
 
     if(playerKilled) return;
@@ -228,8 +239,6 @@
 
   },300);
 
-  /* ----------- WEBVIEW APP LIFECYCLE ----------- */
-
   document.addEventListener("visibilitychange",()=>{
     if(document.hidden){
       appVisible=false;
@@ -245,7 +254,7 @@
   window.addEventListener("pagehide",pauseAll);
   window.addEventListener("pageshow",()=>setTimeout(resumeAll,350));
 
-  /* ---------------- MIDROLL ---------------- */
+  /* ---------------- MIDROLL TIMER ---------------- */
 
   setInterval(()=>{
 
