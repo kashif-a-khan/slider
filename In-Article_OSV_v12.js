@@ -8,8 +8,8 @@
   const IS_GLOBAL_INDICES_PAGE = location.pathname.toLowerCase().includes("/markets/global-indices/");
 
 
-  const WIDTH  = isMobile ? 340 : 640;
-  const HEIGHT = isMobile ? 190 : 360;
+  const WIDTH  = isMobile ? 340 : 512;
+  const HEIGHT = isMobile ? 190 : 288;
 
   const INSERT_AFTER_P = 3;
   const MIDROLL_INTERVAL = 15;
@@ -332,5 +332,6 @@
   // Buttons
   muteBtn.onclick = () => { const m = !video.muted; video.muted=m; if(adsManager) adsManager.setVolume(m?0:1); muteBtn.textContent=m?"🔇":"🔊"; };
   closeBtn.onclick = () => { playerKilled=true; try{adsManager?.destroy()}catch{}; try{hlsInstance?.destroy()}catch{}; video.pause(); video.src=""; container.remove(); placeholder.remove(); window.__MC_OUTSTREAM_LOADED__=false; };
+
 
 })();
