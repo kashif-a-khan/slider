@@ -130,33 +130,36 @@
   `;
 
 
-	function findEuropeanMarketsAnchor() {
+	function findEuropeanMarketsRow() {
 
-  if (!IS_GLOBAL_INDICES_PAGE) return null;
+	  if (!IS_GLOBAL_INDICES_PAGE) return null;
 
-  const spans = document.querySelectorAll("span");
+	  const spans = document.querySelectorAll("span");
 
-  for (const sp of spans) {
-    if (!sp.textContent) continue;
+	  for (const sp of spans) {
+		if (!sp.textContent) continue;
 
-    const text = sp.textContent.trim().toUpperCase();
+		const text = sp.textContent.trim().toUpperCase();
 
-    if (text === "EUROPEAN MARKETS" || text.includes("EUROPEAN MARKETS")) {
-      return sp;
-    }
-  }
+		if (text === "EUROPEAN MARKETS" || text.includes("EUROPEAN MARKETS")) {
 
-  return null;
-}
+		  const tr = sp.closest("tr");
+		  if (tr) return tr;
+		}
+	  }
+
+	  return null;
+	}
+
 
 	
 	
   // Inject in article
   function injectInArticle() {
 	  
-	  const euAnchor = findEuropeanMarketsAnchor();
-	  if (euAnchor) {
-		euAnchor.after(container);
+	const euRow = findEuropeanMarketsRow();
+	  if (euRow) {
+		euRow.after(container);
 		return;
 	  }
 	  
