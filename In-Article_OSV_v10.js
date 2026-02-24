@@ -9,7 +9,7 @@
   const WIDTH  = isMobile ? 340 : 640;
   const HEIGHT = isMobile ? 190 : 360;
 
-  const INSERT_AFTER_P = 2;
+  const INSERT_AFTER_P = 3;
   const MIDROLL_INTERVAL = 15;
   const ENABLE_STICKY = true;
 
