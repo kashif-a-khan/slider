@@ -12,7 +12,7 @@
 
   const INSERT_AFTER_P = 3;
   const MIDROLL_INTERVAL = 15;
-  const ENABLE_STICKY = true;
+  const ENABLE_STICKY = false;
 
   const STICKY_BOTTOM = isMobile ? 110 : 12;
   const STICKY_TOP = 50;
