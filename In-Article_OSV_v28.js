@@ -40,14 +40,14 @@
   ];
 
   const PREROLL_WATERFALL = [
-    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_1&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480%7C800x450%7C300x250%7C1x1%7C635x357%7C444x250%7C419x236%7C333x250&gdfp_req=1&unviewed_position_start=1&output=vast&env=instream&vpos=preroll&impl=s&plcmt=2&vad_type=linear&ad_type=audio_video&vpw=640&vph=360&min_ad_duration=5000&max_ad_duration=60000",
-    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_2&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480%7C800x450%7C300x250%7C1x1%7C635x357%7C444x250%7C419x236%7C333x250&gdfp_req=1&unviewed_position_start=1&output=vast&env=instream&vpos=preroll&impl=s&plcmt=2&vad_type=linear&ad_type=audio_video&vpw=640&vph=360&min_ad_duration=5000&max_ad_duration=60000",
-    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_3&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480%7C800x450%7C300x250%7C1x1%7C635x357%7C444x250%7C419x236%7C333x250&gdfp_req=1&unviewed_position_start=1&output=vast&env=instream&vpos=preroll&impl=s&plcmt=2&vad_type=linear&ad_type=audio_video&vpw=640&vph=360&min_ad_duration=5000&max_ad_duration=60000"
+    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_1&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480%7C800x450%7C300x250%7C1x1%7C635x357%7C444x250%7C419x236%7C333x250&gdfp_req=1&unviewed_position_start=1&output=xml_vast4&max_redirects=3&env=instream&vpos=preroll&impl=s&plcmt=2&vad_type=linear&ad_type=audio_video&vpw=640&vph=360&min_ad_duration=5000&max_ad_duration=60000",
+    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_2&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480%7C800x450%7C300x250%7C1x1%7C635x357%7C444x250%7C419x236%7C333x250&gdfp_req=1&unviewed_position_start=1&output=xml_vast4&max_redirects=3&env=instream&vpos=preroll&impl=s&plcmt=2&vad_type=linear&ad_type=audio_video&vpw=640&vph=360&min_ad_duration=5000&max_ad_duration=60000",
+    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_3&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480%7C800x450%7C300x250%7C1x1%7C635x357%7C444x250%7C419x236%7C333x250&gdfp_req=1&unviewed_position_start=1&output=xml_vast4&max_redirects=3&env=instream&vpos=preroll&impl=s&plcmt=2&vad_type=linear&ad_type=audio_video&vpw=640&vph=360&min_ad_duration=5000&max_ad_duration=60000"
   ];
   const MIDROLL_WATERFALL = [
-    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_4&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480%7C800x450%7C300x250%7C1x1%7C635x357%7C444x250%7C419x236%7C333x250&gdfp_req=1&unviewed_position_start=1&output=vast&env=instream&vpos=midroll&impl=s&plcmt=2&vad_type=linear&ad_type=audio_video&vpw=640&vph=360&min_ad_duration=5000&max_ad_duration=60000",
-    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_5&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480%7C800x450%7C300x250%7C1x1%7C635x357%7C444x250%7C419x236%7C333x250&gdfp_req=1&unviewed_position_start=1&output=vast&env=instream&vpos=midroll&impl=s&plcmt=2&vad_type=linear&ad_type=audio_video&vpw=640&vph=360&min_ad_duration=5000&max_ad_duration=60000",
-    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_6&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480%7C800x450%7C300x250%7C1x1%7C635x357%7C444x250%7C419x236%7C333x250&gdfp_req=1&unviewed_position_start=1&output=vast&env=instream&vpos=midroll&impl=s&plcmt=2&vad_type=linear&ad_type=audio_video&vpw=640&vph=360&min_ad_duration=5000&max_ad_duration=60000"
+    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_4&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480%7C800x450%7C300x250%7C1x1%7C635x357%7C444x250%7C419x236%7C333x250&gdfp_req=1&unviewed_position_start=1&output=xml_vast4&max_redirects=3&env=instream&vpos=midroll&impl=s&plcmt=2&vad_type=linear&ad_type=audio_video&vpw=640&vph=360&min_ad_duration=5000&max_ad_duration=60000",
+    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_5&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480%7C800x450%7C300x250%7C1x1%7C635x357%7C444x250%7C419x236%7C333x250&gdfp_req=1&unviewed_position_start=1&output=xml_vast4&max_redirects=3&env=instream&vpos=midroll&impl=s&plcmt=2&vad_type=linear&ad_type=audio_video&vpw=640&vph=360&min_ad_duration=5000&max_ad_duration=60000",
+    "https://pubads.g.doubleclick.net/gampad/ads?iu=/1039154/Inhouse_Video_1_6&tfcd=0&npa=0&sz=400x300%7C640x360%7C640x480%7C800x450%7C300x250%7C1x1%7C635x357%7C444x250%7C419x236%7C333x250&gdfp_req=1&unviewed_position_start=1&output=xml_vast4&max_redirects=3&env=instream&vpos=midroll&impl=s&plcmt=2&vad_type=linear&ad_type=audio_video&vpw=640&vph=360&min_ad_duration=5000&max_ad_duration=60000"
   ];
 
   let prerollIndex = 0;
@@ -447,10 +447,14 @@
         }
 
         hlsInstance = new Hls({
-          enableWorker: true,
-          lowLatencyMode: true,
-          backBufferLength: 30
-        });
+		  enableWorker: true,
+		  lowLatencyMode: false,
+		  maxBufferLength: 30,
+		  maxMaxBufferLength: 60,
+		  startLevel: -1,
+		  abrEwmaDefaultEstimate: 500000,
+		  capLevelToPlayerSize: true
+		});
 
         hlsInstance.loadSource(CONTENT_VIDEO);
         hlsInstance.attachMedia(video);
